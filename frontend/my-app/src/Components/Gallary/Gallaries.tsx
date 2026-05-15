@@ -1,101 +1,132 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import PortalModal from "../../Shared/Model/Model";
 import "./Gallaries.css";
 import { UploadModal } from "../UploadImage/UploadImage";
-
-interface GalleryItem {
-  url: string;
-  fileName: string;
-}
+import type { GalleryItem } from "../../types/types";
+import { fetchGalleryApi, uploadImage } from "../../services/image.api";
 
 export const Gallaries = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [images, setImages] = useState<GalleryItem[]>([]);
-  
-  const handleImageUpload = async (base64Image: any, fileName: any) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const email = user.user?.email || "testbilal@gmail.com";
-    console.log("Uploading image for:", email);
-    console.log("File Name:", fileName);
+  const getUserEmail = () => {
     try {
-      const API_URL =
-        "https://t7kpkvx5f6.execute-api.us-east-1.amazonaws.com/uploadImage";
-
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          imageBase64: base64Image,
-          fileName: fileName,
-        }),
-      });
-
-      const data = await response.json();
-    console.log("Upload response:", data);
-      if (response.ok) {
-        await fetchGallery();
-        alert("Success! File uploaded to S3.");
-      } else {
-        alert("Upload failed: " + (data.error || "Unknown error"));
-      }
-    } catch (err) {
-      console.error("Upload Error:", err);
-      alert("Network error occurred during upload.");
+      const user = JSON.parse(
+        localStorage.getItem("user") || "null"
+      );
+      return user?.user?.email || null;
+    } catch {
+      return null;
     }
   };
 
+  const fetchGallery = useCallback(async () => {
+    const email = getUserEmail();
+    if (!email) return;
 
-  const fetchGallery = async () => {
+    setLoading(true);
+    setError("");
+
     try {
-  
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const email = user.user?.email || 'testbilal@gmail.com';
-      console.log("Fetching gallery for:", email);
-      if (!email) return;
-      
-      const response = await fetch(`https://t7kpkvx5f6.execute-api.us-east-1.amazonaws.com/gallery/${email}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        setImages(data); 
-      }
-      console.log("Gallery fetch response:", data,"response status:", response);
-    } catch (error) {
-      console.error("Failed to fetch gallery:", error);
+      const data = await fetchGalleryApi(email);
+      setImages(data || []);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load gallery"
+      );
       setImages([]);
-    } 
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleImageUpload = async (
+    base64Image: string,
+    fileName: string
+  ) => {
+    const email = getUserEmail();
+    if (!email) return;
+
+    try {
+      await uploadImage({
+        email,
+        base64Image,
+        fileName,
+      });
+
+      setSuccess("Image uploaded successfully");
+      await fetchGallery();
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Upload failed"
+      );
+    }
   };
 
   useEffect(() => {
     fetchGallery();
-  }, []);
-
- console.log("Gallery Images:", images);
+  }, [fetchGallery]);
 
   return (
     <>
       <div className="Gallaries-container">
         <header className="Gallaries-header">
           <h1>My Gallery</h1>
-          <button className="upload-btn" onClick={() => setIsModalOpen(true)}>+ Upload New Image</button>
+
+          <button
+            className="upload-btn"
+            onClick={() => setIsModalOpen(true)}
+          >
+            + Upload New Image
+          </button>
         </header>
 
+        {loading && <p>Loading gallery...</p>}
+
+        {error && (
+          <p className="error">{error}</p>
+        )}
+
+        {success && (
+          <p className="success">{success}</p>
+        )}
+
         <div className="image-grid">
-          {images.length > 0 ? images?.map((img:any,index) => (
-            <div key={index} className="image-card">
-              <img src={img.url} alt={img?.fileName} />
-              <div className="image-info">
-                <span>{img?.fileName}</span>
+          {images.length > 0 ? (
+            images.map((img, index) => (
+              <div
+                key={index}
+                className="image-card"
+              >
+                <img
+                  src={img.url}
+                  alt={img.fileName}
+                />
+
+                <div className="image-info">
+                  <span>{img.fileName}</span>
+                </div>
               </div>
-            </div> 
-          )): <p>No images found in the gallery.</p>}
+            ))
+          ) : (
+            !loading && (
+              <p>No images found in the gallery.</p>
+            )
+          )}
         </div>
       </div>
-      <PortalModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+
+      <PortalModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      >
         <UploadModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
