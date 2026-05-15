@@ -1,3 +1,5 @@
+import type { SignupUserTypes } from "../types/signup";
+
 export const loginUser = async (
   email: string,
   password: string
@@ -23,6 +25,24 @@ export const loginUser = async (
     throw new Error(
       data.message || "Login failed"
     );
+  }
+
+  return data;
+};
+
+export const SignupUser = async (userData: SignupUserTypes) => {
+  const response = await fetch("/signup", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(userData),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Signup failed");
   }
 
   return data;

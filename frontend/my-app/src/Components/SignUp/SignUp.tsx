@@ -1,63 +1,70 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { SignupUser } from "../../services/api";
 
 export const SignUp = () => {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     userName: "",
     email: "",
-    password: ""
+    password: "",
   });
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (user) {
-      navigate("/dashboard");
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+
+      if (user) {
+        navigate("/dashboard", { replace: true });
+      }
+    } catch {
+      localStorage.removeItem("user");
     }
   }, [navigate]);
 
-  const handleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
     }));
   };
 
-  const signUpUser = async (e:React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); 
+  const signUpUser = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
+    e.preventDefault();
+
+    if (loading) return; // prevent double submit
+
     setLoading(true);
-
-    const API_URL = "https://t7kpkvx5f6.execute-api.us-east-1.amazonaws.com/signUp";
-
-    const userData = {
-      id: Date.now().toString(),
-      name: formData.userName, 
-      email: formData.email,    
-      password: formData.password 
-    };
+    setError("");
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData)
+      const result = await SignupUser({
+        id: Date.now().toString(),
+        name: formData.userName,
+        email: formData.email,
+        password: formData.password,
       });
 
-      const result = await response.json();
-      console.log("Response:", result);
-      if (response.ok) {
-        alert("User Created Successfully!");
-        console.log("Success:", result);
-        navigate("/login");
+      console.log("Signup success:", result);
+
+      // better than alert
+      navigate("/login", { replace: true });
+
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
       } else {
-        alert("Error: " + result.error);
+        setError("Something went wrong");
       }
-    } catch (err) {
-      console.error("Network Error:", err);
-      alert("Network Error. Is your API live?");
     } finally {
       setLoading(false);
     }
@@ -68,47 +75,63 @@ export const SignUp = () => {
       <div className="auth-card">
         <h2>Create Account</h2>
         <p>Start your journey with us today.</p>
-        
+
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={signUpUser}>
           <div className="form-group">
             <label>User Name</label>
-            <input 
-              type="text" 
-              name="userName" // Must match state key
-              value={formData.userName} 
-              onChange={handleChange} 
-              className="form-input" 
-              placeholder="user name" 
-              required 
+            <input
+              type="text"
+              name="userName"
+              value={formData.userName}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="User name"
+              required
             />
           </div>
+
           <div className="form-group">
             <label>Email Address</label>
-            <input 
-              type="email" 
-              name="email" // Must match state key
-              value={formData.email} 
-              onChange={handleChange} 
-              className="form-input" 
-              placeholder="you@example.com" 
-              required 
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="you@example.com"
+              required
             />
           </div>
+
           <div className="form-group">
             <label>Password</label>
-            <input 
-              type="password" 
-              name="password" // Must match state key
-              value={formData.password} 
-              onChange={handleChange} 
-              className="form-input" 
-              placeholder="••••••••" 
-              required 
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="••••••••"
+              required
             />
           </div>
-          
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? <div className="spinner"></div> : "Sign Up"}
+
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="spinner" />
+            ) : (
+              "Sign Up"
+            )}
           </button>
         </form>
       </div>
