@@ -1,55 +1,47 @@
-import { useEffect, useState, useCallback } from "react";
-import PortalModal from "../../Shared/Model/Model";
-import "./Gallaries.css";
-import { UploadModal } from "../UploadImage/UploadImage";
-import type { GalleryItem } from "../../types/types";
-import { fetchGalleryApi, uploadImage } from "../../services/image.api";
+import { useEffect, useState } from "react";
 
-export const Gallaries = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
+import "./Gallery.styles.css";
+import type { GalleryItem } from "../../features/gallery/gallery.types";
+import { getUserEmail } from "../../utils/storage";
+import { fetchGallery, uploadImage } from "../../features/gallery/gallery.service";
+import { UploadModal } from "../../Components/gallary/UploadImage";
+import PortalModal from './../../Shared/Model/Model';
+
+const Gallery = () => {
   const [images, setImages] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [isModalOpen, setIsModalOpen] =
+    useState(false);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const getUserEmail = () => {
-    try {
-      const user = JSON.parse(
-        localStorage.getItem("user") || "null"
-      );
-      return user?.user?.email || null;
-    } catch {
-      return null;
-    }
-  };
-
-  const fetchGallery = useCallback(async () => {
+  const loadGallery = async () => {
     const email = getUserEmail();
+
     if (!email) return;
 
     setLoading(true);
-    setError("");
 
     try {
-      const data = await fetchGalleryApi(email);
-      setImages(data || []);
+      const data = await fetchGallery(email);
+      setImages(data);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load gallery"
-      );
-      setImages([]);
+      console.error(err);
+      setError("Failed to load gallery");
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  const handleImageUpload = async (
+  const handleUpload = async (
     base64Image: string,
     fileName: string
   ) => {
     const email = getUserEmail();
+
     if (!email) return;
 
     try {
@@ -60,19 +52,19 @@ export const Gallaries = () => {
       });
 
       setSuccess("Image uploaded successfully");
-      await fetchGallery();
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Upload failed"
-      );
+
+      await loadGallery();
+
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      setError("Upload failed");
     }
   };
 
   useEffect(() => {
-    fetchGallery();
-  }, [fetchGallery]);
+    loadGallery();
+  }, []);
 
   return (
     <>
@@ -130,11 +122,11 @@ export const Gallaries = () => {
         <UploadModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onUpload={handleImageUpload}
+          onUpload={handleUpload}
         />
       </PortalModal>
     </>
   );
 };
 
-export default Gallaries;
+export default Gallery;
