@@ -19,7 +19,7 @@ export const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <Link to="/galleries" className="nav-brand">
+      <Link to="/" className="nav-brand">
         <div className="nav-logo">
           Photo <span>Gallery</span>
         </div>
