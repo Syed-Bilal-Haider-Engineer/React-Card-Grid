@@ -1,4 +1,4 @@
-import type { SignupUserTypes } from "../types/signup";
+import type { SignupUserTypes } from "../types/types";
 
 export const loginUser = async (
   email: string,
@@ -47,3 +47,4 @@ export const SignupUser = async (userData: SignupUserTypes) => {
 
   return data;
 };
+
