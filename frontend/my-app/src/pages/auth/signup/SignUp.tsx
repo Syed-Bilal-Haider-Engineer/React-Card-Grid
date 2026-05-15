@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SignupUser } from "../../services/api";
+import { signUpUserService } from "../../../features/auth/auth.service";
+
 
 export const SignUp = () => {
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,7 @@ export const SignUp = () => {
   };
 
   const signUpUser = async (
-    e: React.FormEvent<HTMLFormElement>
+    e: React.FormEvent<HTMLFormElement | String>
   ) => {
     e.preventDefault();
 
@@ -47,7 +48,7 @@ export const SignUp = () => {
     setError("");
 
     try {
-      const result = await SignupUser({
+      const result = await signUpUserService({
         id: Date.now().toString(),
         name: formData.userName,
         email: formData.email,
