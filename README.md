@@ -1,4 +1,5 @@
-# Frontend - My App
+# Full Stack Serverless React Application
+## Frontend - My App
 
 A modern React-based frontend application built with **Vite** and **TypeScript**. This application serves as the client interface for a full-stack serverless web application.
 
@@ -204,7 +205,7 @@ This frontend communicates with the serverless backend API. Ensure the backend i
 - `GET /gallery/{email}` - Get the user's gallery
 
 
-# Backend - Serverless API
+## Backend - Serverless API
 
 A serverless backend application built with **Node.js** and **AWS Lambda** using the **Serverless Framework**. This application provides authentication, user management, and image gallery services powered by DynamoDB and S3.
 
