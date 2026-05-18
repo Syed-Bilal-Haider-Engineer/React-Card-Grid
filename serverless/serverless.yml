@@ -1,20 +1,27 @@
-service: my-service 
+service: my-service
 
 plugins:
   - serverless-dotenv-plugin
+  - serverless-offline
 
 provider:
   name: aws
-  httpApi:
-   cors: true
   runtime: nodejs22.x
   region: us-east-1
+
+  httpApi:
+    cors: true
+
   environment:
+    TABLE_NAME: users
     JWT_SECRET: ${env:JWT_SECRET}
     BUCKET_NAME: ${self:service}-uploads-${sls:stage}
+
   iam:
     role:
       statements:
+
+        # DynamoDB Permissions
         - Effect: Allow
           Action:
             - dynamodb:PutItem
@@ -24,85 +31,151 @@ provider:
             - dynamodb:Scan
             - dynamodb:Query
           Resource:
-            - Fn::GetAtt: [ MyTable, Arn ] 
-            - Fn::Join: [ "/", [ { "Fn::GetAtt": [ "MyTable", "Arn" ] }, "index/*" ] ]
+            - Fn::GetAtt:
+                - MyTable
+                - Arn
+
+            - Fn::Join:
+                - "/"
+                - - Fn::GetAtt:
+                      - MyTable
+                      - Arn
+                  - "index/*"
+
+        # S3 Permissions
         - Effect: Allow
           Action:
             - s3:PutObject
             - s3:PutObjectAcl
-            - s3:ListBucket
             - s3:GetObject
             - s3:DeleteObject
+            - s3:ListBucket
           Resource:
-            - Fn::Join: [ "", [ { "Fn::GetAtt": [ UserBucket, Arn ] }, "/*" ] ]
+            - Fn::GetAtt:
+                - UserBucket
+                - Arn
+
+            - Fn::Join:
+                - ""
+                - - Fn::GetAtt:
+                      - UserBucket
+                      - Arn
+                  - "/*"
+
 functions:
-  signUp:
-    handler: handler.signUp
+
+  # AUTH
+  signup:
+    handler: src/handlers/auth/signup.handler
     events:
-      - httpApi: 'POST /signUp'
+      - httpApi:
+          path: /signup
+          method: post
+
   login:
-    handler: handler.login
+    handler: src/handlers/auth/login.handler
     events:
-      - httpApi: 'POST /login'
+      - httpApi:
+          path: /login
+          method: post
+
+  # USERS
   getOne:
-    handler: handler.getOne
+    handler: src/handlers/users/getOne.handler
     events:
-      - httpApi: 'GET /user/{id}'
+      - httpApi:
+          path: /users/{id}
+          method: get
+
   getAll:
-    handler: handler.getAll
+    handler: src/handlers/users/getAll.handler
     events:
-      - httpApi: 'GET /getAllUsers'
-  delete:
-    handler: handler.delete
+      - httpApi:
+          path: /users
+          method: get
+
+  deleteUser:
+    handler: src/handlers/users/delete.handler
     events:
-      - httpApi: 'DELETE /user/{id}'
-  UploadImage:
-    handler: handler.uploadImage
+      - httpApi:
+          path: /users/{id}
+          method: delete
+
+  # GALLERY
+  uploadImage:
+    handler: src/handlers/gallery/uploadImage.handler
     events:
-      - httpApi: 'POST /uploadImage'
+      - httpApi:
+          path: /gallery/upload
+          method: post
+
   getGallery:
-    handler: handler.getGallery
+    handler: src/handlers/gallery/getGallery.handler
     events:
-      - httpApi: 'GET /gallery/{email}'
+      - httpApi:
+          path: /gallery/{email}
+          method: get
 
 resources:
   Resources:
-    MyTable: 
+
+    # DynamoDB Table
+    MyTable:
       Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
       Properties:
-        TableName: users 
-        
+        TableName: users
+
+        BillingMode: PAY_PER_REQUEST
+
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
+
           - AttributeName: email
             AttributeType: S
+
         KeySchema:
           - AttributeName: id
             KeyType: HASH
+
         GlobalSecondaryIndexes:
           - IndexName: EmailIndex
+
             KeySchema:
               - AttributeName: email
-                KeyType: HASH 
+                KeyType: HASH
+
             Projection:
               ProjectionType: ALL
-        BillingMode: PAY_PER_REQUEST
-    
+
+    # S3 Bucket
     UserBucket:
       Type: AWS::S3::Bucket
+      DeletionPolicy: Retain
       Properties:
-        BucketName: my-user-uploads-unique-gallaries-2025
+        BucketName: my-user-uploads-unique-gallaries-2026
+
         PublicAccessBlockConfiguration:
           BlockPublicAcls: false
           BlockPublicPolicy: false
           IgnorePublicAcls: false
           RestrictPublicBuckets: false
+
         OwnershipControls:
           Rules:
             - ObjectOwnership: BucketOwnerPreferred
+
         CorsConfiguration:
           CorsRules:
-            - AllowedMethods: [GET, PUT, POST, DELETE]
-              AllowedOrigins: ['*']
-              AllowedHeaders: ['*']
+            - AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+
+              AllowedOrigins:
+                - "*"
+
+              AllowedHeaders:
+                - "*"
