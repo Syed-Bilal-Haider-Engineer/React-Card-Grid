@@ -1,6 +1,4 @@
-import {
-  useState,
-} from "react";
+import { useState } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../../../features/auth/auth.service";
@@ -18,9 +16,7 @@ const Login = () => {
     password: "",
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
     setFormData((prev) => ({
@@ -29,24 +25,16 @@ const Login = () => {
     }));
   };
 
-  const handleLogin = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     setLoading(true);
     setError("");
 
     try {
-      const data = await loginUser(
-        formData.email,
-        formData.password
-      );
+      const data = await loginUser(formData.email, formData.password);
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data)
-      );
+      localStorage.setItem("user", JSON.stringify(data));
 
       navigate("/");
     } catch (err: unknown) {
@@ -59,42 +47,41 @@ const Login = () => {
   };
 
   return (
- <div className="auth-page">
+    <div className="auth-page">
       <div className="auth-card">
         <h2>Welcome Back</h2>
 
-        {error && (
-          <p className="error-message">{error}</p>
-        )}
+        {error && <p className="error-message">{error}</p>}
 
         <form onSubmit={handleLogin}>
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-          />
-
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-          />
-
-          <button disabled={loading}>
-            {loading ? "Loading..." : "Login"}
-          </button>
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+                className="form-input"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+                className="form-input"
+            />
+          </div>
+          <button disabled={loading}  className="btn-primary">{loading ? "Loading..." : "Login"}</button>
         </form>
 
-        <Link to="/signup">
-          Create account
-        </Link>
+        <Link to="/signup">Create account</Link>
       </div>
     </div>
-  )
-
-}
+  );
+};
 export default Login;
