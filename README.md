@@ -1,4 +1,6 @@
 # Full Stack Serverless React Application
+<img width="1903" height="862" alt="image" src="https://github.com/user-attachments/assets/5ae9b7e7-03bb-4f4d-9577-9e1190494ae8" />
+
 ## Frontend - My App
 
 A modern React-based frontend application built with **Vite** and **TypeScript**. This application serves as the client interface for a full-stack serverless web application.
