@@ -1,6 +1,7 @@
 const {
   QueryCommand,
   UpdateCommand,
+  ScanCommand,
 } = require("@aws-sdk/lib-dynamodb");
 
 const {
@@ -20,6 +21,10 @@ const uploadUserImage = async ({
   imageBase64,
   fileName,
 }) => {
+
+  if (!imageBase64 || !fileName || !email) {
+  throw new Error("Missing required fields");
+}
   const userLookup = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
@@ -81,6 +86,21 @@ const uploadUserImage = async ({
   return imageUrl;
 };
 
+
+ const getUserAllGalleryImages = async () => {
+  const result = await docClient.send(
+    new ScanCommand({
+      TableName: TABLE_NAME,
+      ProjectionExpression: "gallery",
+    })
+  );
+
+  const galleries =
+    result.Items?.map((item) => item.gallery || []) || [];
+
+  return galleries.flat();
+};
+
 const getUserGallery = async (email) => {
   const result = await docClient.send(
     new QueryCommand({
@@ -105,4 +125,5 @@ const getUserGallery = async (email) => {
 module.exports = {
   uploadUserImage,
   getUserGallery,
+  getUserAllGalleryImages
 };

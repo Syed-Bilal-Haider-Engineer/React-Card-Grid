@@ -8,6 +8,7 @@ export const apiClient = async (
     options
   );
 
+  console.log(`API Request: ${options?.method || "GET"} ${url}`, options);
   const data = await res.json();
 
   if (!res.ok) {

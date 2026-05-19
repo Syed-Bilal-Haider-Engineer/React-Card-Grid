@@ -115,6 +115,12 @@ functions:
       - httpApi:
           path: /gallery/{email}
           method: get
+  getUserAllGalleryImages:
+    handler: src/handlers/gallery/getGallery.handler
+    events:
+      - httpApi:
+          path: /gallery/all
+          method: get
 
 resources:
   Resources:

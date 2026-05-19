@@ -20,3 +20,7 @@ export const fetchGalleryApi = async (
 ) => {
   return apiClient(`${ENDPOINTS.GALLERY}/${email}`);
 };
+
+export const fetchAllGalleryImagesApi = async () => {
+  return apiClient(ENDPOINTS.ALL_GALLERY_IMAGES); 
+}

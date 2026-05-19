@@ -1,32 +1,25 @@
 import { useEffect, useState } from "react";
 
-
 import "./Gallery.styles.css";
 import type { GalleryItem } from "../../features/gallery/gallery.types";
-import { getUserEmail } from "../../utils/storage";
-import { fetchGallery, uploadImage } from "../../features/gallery/gallery.service";
-import { UploadModal } from "../../Components/gallary/UploadImage";
-import PortalModal from './../../Shared/Model/Model';
+import { fetchAllGalleryImages } from "../../features/gallery/gallery.service";
+import ImageModal from "../../Shared/Model/ImageModel";
 
 const Gallery = () => {
   const [images, setImages] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const [isModalOpen, setIsModalOpen] =
-    useState(false);
+  const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const loadGallery = async () => {
-    const email = getUserEmail();
-
-    if (!email) return;
-
     setLoading(true);
 
     try {
-      const data = await fetchGallery(email);
+      const data = await fetchAllGalleryImages();
+      console.log("Fetched gallery data:", data);
       setImages(data);
     } catch (err) {
       console.error(err);
@@ -36,31 +29,31 @@ const Gallery = () => {
     }
   };
 
-  const handleUpload = async (
-    base64Image: string,
-    fileName: string
-  ) => {
-    const email = getUserEmail();
+  // const handleUpload = async (
+  //   base64Image: string,
+  //   fileName: string
+  // ) => {
+  //   const email = getUserEmail();
 
-    if (!email) return;
+  //   if (!email) return;
 
-    try {
-      await uploadImage({
-        email,
-        base64Image,
-        fileName,
-      });
+  //   try {
+  //     await uploadImage({
+  //       email,
+  //       base64Image,
+  //       fileName,
+  //     });
 
-      setSuccess("Image uploaded successfully");
+  //     setSuccess("Image uploaded successfully");
 
-      await loadGallery();
+  //     await loadGallery();
 
-      setIsModalOpen(false);
-    } catch (err) {
-      console.error(err);
-      setError("Upload failed");
-    }
-  };
+  //     setIsModalOpen(false);
+  //   } catch (err) {
+  //     console.error(err);
+  //     setError("Upload failed");
+  //   }
+  // };
 
   useEffect(() => {
     loadGallery();
@@ -70,51 +63,34 @@ const Gallery = () => {
     <>
       <div className="Gallaries-container">
         <header className="Gallaries-header">
-          <h1>My Gallery</h1>
-
-          <button
-            className="upload-btn"
-            onClick={() => setIsModalOpen(true)}
-          >
+          <h3>My Gallery</h3>
+          <button className="upload-btn" onClick={() => setIsModalOpen(true)}>
             + Upload New Image
           </button>
         </header>
 
         {loading && <p>Loading gallery...</p>}
 
-        {error && (
-          <p className="error">{error}</p>
-        )}
+        {error && <p className="error">{error}</p>}
 
-        {success && (
-          <p className="success">{success}</p>
-        )}
+        {success && <p className="success">{success}</p>}
 
         <div className="image-grid">
-          {images.length > 0 ? (
-            images.map((img, index) => (
-              <div
-                key={index}
-                className="image-card"
-              >
-                <img
-                  src={img.url}
-                  alt={img.fileName}
-                />
+          {images?.length > 0
+            ? images.map((img, index) => (
+                <div key={index} className="image-card" onClick={() => setSelectedImage(img)}>
+                  <img src={img.url} alt={img.fileName} />
 
-                <div className="image-info">
-                  <span>{img.fileName}</span>
+                  <div className="image-info">
+                    <span>{img.fileName?.substring(0, 20)}...</span>
+                  </div>
                 </div>
-              </div>
-            ))
-          ) : (
-            !loading && (
-              <p>No images found in the gallery.</p>
-            )
-          )}
+              ))
+            : !loading && <p>No images found in the gallery.</p>}
         </div>
       </div>
 
+      {/* 
       <PortalModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -124,7 +100,15 @@ const Gallery = () => {
           onClose={() => setIsModalOpen(false)}
           onUpload={handleUpload}
         />
-      </PortalModal>
+      </PortalModal> */}
+      {selectedImage && (
+        <ImageModal
+          isOpen={!!selectedImage}
+          imageUrl={selectedImage.url}
+          title={selectedImage.fileName}
+          onClose={() => setSelectedImage(null)}
+        />
+      )}
     </>
   );
 };

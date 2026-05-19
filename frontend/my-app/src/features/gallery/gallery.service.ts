@@ -1,6 +1,7 @@
 import {
   fetchGalleryApi,
   uploadImageApi,
+  fetchAllGalleryImagesApi
 } from "./gallery.api";
 
 export const uploadImage = async (payload: any) => {
@@ -11,4 +12,8 @@ export const fetchGallery = async (
   email: string
 ) => {
   return fetchGalleryApi(email);
+};
+
+export const fetchAllGalleryImages = async () => {
+  return fetchAllGalleryImagesApi();
 };

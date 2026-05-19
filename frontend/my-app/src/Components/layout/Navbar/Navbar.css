@@ -2,7 +2,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
+  padding: 0.5rem 2rem;
   background: white;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
@@ -16,8 +16,12 @@
   color: #4b5563; 
   font-weight: 500;
   transition: color 0.2s;
+
 }
 
+.user-email {
+ margin-right: 20px;
+}
 .nav-item:hover { color: #6366f1; }
 
 .logout-btn {
